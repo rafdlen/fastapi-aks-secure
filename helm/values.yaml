@@ -1,0 +1,31 @@
+image:
+  repository: <ACR_NAME>.azurecr.io/fastapi-aks-secure
+  tag: "v1"
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8080
+
+ingress:
+  enabled: true
+  className: nginx
+  host: fastapi.local   # replace if you have DNS
+  tls: false
+
+env:
+  TENANT: "<your-tenant-guid>"
+  AUD: "<your-app-client-id-or-app-id-uri>"
+
+keyVault:
+  enabled: true
+  name: "<kv-name>"        # e.g., kv-fastapi-xyz
+  tenantId: "<your-tenant-guid>"
+  secrets:
+    - name: "example-secret" # create in KV; mounted as file
+      objectType: "secret"
+      key: "example-secret"
+      fileName: "example-secret"

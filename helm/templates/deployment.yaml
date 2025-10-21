@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fastapi
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels: { app: fastapi }
+  template:
+    metadata:
+      labels: { app: fastapi }
+      annotations:
+        {{- if .Values.keyVault.enabled }}
+        secrets-store.csi.k8s.io/used: "true"
+        {{- end }}
+    spec:
+      containers:
+        - name: app
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.targetPort }}
+          env:
+            - name: TENANT
+              value: "{{ .Values.env.TENANT }}"
+            - name: AUD
+              value: "{{ .Values.env.AUD }}"
+          volumeMounts:
+            {{- if .Values.keyVault.enabled }}
+            - name: kv-secrets
+              mountPath: "/mnt/secrets"
+              readOnly: true
+            {{- end }}
+          readinessProbe:
+            httpGet: { path: /health, port: {{ .Values.service.targetPort }} }
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /health, port: {{ .Values.service.targetPort }} }
+            initialDelaySeconds: 10
+            periodSeconds: 15
+      volumes:
+        {{- if .Values.keyVault.enabled }}
+        - name: kv-secrets
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: "kv-secret-provider"
+        {{- end }}
