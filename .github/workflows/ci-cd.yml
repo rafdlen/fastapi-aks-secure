@@ -61,13 +61,13 @@ jobs:
 
       - name: Helm upgrade/install
         run: |
-          REPO=${{ env.IMG%:* }}
-          TAG=${{ env.IMG##*: }}
-          helm upgrade --install fastapi ./helm \
-            --set image.repository=$REPO \
-            --set image.tag=$TAG \
-            --set env.TENANT=${{ secrets.AZURE_TENANT_ID }} \
-            --set env.AUD=${{ secrets.AZURE_APP_CLIENT_ID }} \
-            --set keyVault.name=${{ secrets.KV_NAME }} \
-            --set keyVault.tenantId=${{ secrets.AZURE_TENANT_ID }}
+              REPO="${IMG%:*}"
+              TAG="${IMG##*:}"
 
+              helm upgrade --install fastapi ./helm \
+                --set image.repository="${REPO}" \
+                --set image.tag="${TAG}" \
+                --set env.TENANT="${AZURE_TENANT_ID}" \
+                --set env.AUD="${AZURE_APP_CLIENT_ID}" \
+                --set keyVault.name="${KV_NAME}" \
+                --set keyVault.tenantId="${AZURE_TENANT_ID}"
